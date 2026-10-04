@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101318">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Winter Arc</title>
+<style>
+:root{--bg:#0c0f14;--card:#151a22;--card2:#1b222d;--text:#f4f7fb;--muted:#9da8b8;--line:#293241;--accent:#b9d8ff;--accent2:#8ab7e8;--ok:#a9e7c0;--danger:#ff9f9f}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0c0f14,#111722 55%,#0c0f14);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.app{max-width:1050px;margin:auto;padding:22px 16px 48px}.top{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:18px}
+h1{font-size:32px;margin:0;letter-spacing:-1px}.sub{color:var(--muted);margin-top:4px}.date{color:var(--muted);font-size:13px;text-align:right}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:rgba(21,26,34,.94);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 30px #0003}
+.span12{grid-column:span 12}.span8{grid-column:span 8}.span6{grid-column:span 6}.span4{grid-column:span 4}
+.card h2{font-size:17px;margin:0 0 12px}.small{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:var(--card2);border-radius:13px;padding:12px}.num{font-size:27px;font-weight:750}.label{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center}.row>*:first-child{flex:1}
+input,textarea,select{width:100%;background:#10151d;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px;font:inherit;outline:none}
+textarea{min-height:110px;resize:vertical}button{border:0;border-radius:11px;padding:10px 13px;background:var(--accent);color:#101318;font-weight:700;cursor:pointer}button.secondary{background:#222b38;color:var(--text);border:1px solid var(--line)}button.danger{background:#382126;color:#ffd4d4;border:1px solid #60323b}
+.list{display:grid;gap:8px;margin-top:10px}.item{display:flex;align-items:center;gap:9px;background:#10151d;border:1px solid var(--line);border-radius:11px;padding:9px}.item.done{opacity:.55;text-decoration:line-through}.item span{flex:1}.x{padding:5px 8px;background:transparent;color:var(--muted)}
+.water{display:flex;align-items:center;gap:10px}.drops{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.drop{width:30px;height:38px;border-radius:50% 50% 55% 55%;background:#202936;border:1px solid #354355;cursor:pointer}.drop.on{background:var(--accent2);border-color:var(--accent2);box-shadow:0 0 12px #8ab7e855}
+.progress{height:9px;background:#202733;border-radius:99px;overflow:hidden}.bar{height:100%;background:var(--accent2);width:0%;transition:.2s}
+.meal{display:grid;grid-template-columns:110px 1fr 34px;gap:7px;align-items:center}.meal+.meal{margin-top:7px}
+textarea.work{min-height:90px}.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.check{display:flex;gap:8px;align-items:center;background:#10151d;border:1px solid var(--line);padding:10px;border-radius:11px}.check input{width:auto}
+.footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:760px){.span8,.span6,.span4{grid-column:span 12}.top{align-items:start}.stats{grid-template-columns:1fr 1fr 1fr}.meal{grid-template-columns:90px 1fr 32px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div><h1>Winter Arc</h1><div class="sub">Small actions. Consistent days.</div></div>
+    <div class="date" id="today"></div>
+  </div>
+
+  <div class="grid">
+    <section class="card span12">
+      <h2>Progress</h2>
+      <div class="stats">
+        <div class="stat"><div class="num" id="dayCount">1</div><div class="label">Day</div></div>
+        <div class="stat"><div class="num" id="weekCount">1</div><div class="label">Week</div></div>
+        <div class="stat"><div class="num" id="streak">0</div><div class="label">Check-ins</div></div>
+      </div>
+      <div style="margin-top:12px" class="row">
+        <input id="startDate" type="date" aria-label="Winter Arc start date">
+        <button onclick="saveStart()">Set start</button>
+      </div>
+      <div class="small" style="margin-top:7px">Your progress is stored only on this device.</div>
+    </section>
+
+    <section class="card span8">
+      <h2>Today's meals</h2>
+      <div id="meals"></div>
+      <div class="row" style="margin-top:9px"><input id="newMeal" placeholder="Add a meal or snack"><button onclick="addMeal()">Add</button></div>
+      <div class="small" style="margin-top:9px">Use this as a simple record of what you ate—no calorie targets.</div>
+    </section>
+
+    <section class="card span4">
+      <h2>Water</h2>
+      <div class="water"><div class="num" id="waterNum">0</div><div class="small">glasses today</div></div>
+      <div class="drops" id="drops"></div>
+      <div class="row"><input id="waterGoal" type="number" min="1" max="20" placeholder="Goal"><button class="secondary" onclick="setWaterGoal()">Set</button></div>
+    </section>
+
+    <section class="card span6">
+      <h2>Workout of the day</h2>
+      <textarea id="workout" class="work" placeholder="Write your workout, sport, walk, stretching, or rest day..."></textarea>
+      <div class="row" style="margin-top:8px">
+        <select id="workoutType"><option>Workout</option><option>Sport</option><option>Walk</option><option>Mobility</option><option>Rest day</option></select>
+        <button onclick="saveWorkout()">Save</button>
+      </div>
+    </section>
+
+    <section class="card span6">
+      <h2>Daily check-in</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" data-check="sleep"> Slept well</label>
+        <label class="check"><input type="checkbox" data-check="school"> School / study</label>
+        <label class="check"><input type="checkbox" data-check="movement"> Moved today</label>
+        <label class="check"><input type="checkbox" data-check="reset"> Room reset</label>
+      </div>
+      <button style="margin-top:10px" onclick="checkIn()">Complete today's check-in</button>
+    </section>
+
+    <section class="card span6">
+      <h2>Chore list</h2>
+      <div class="row"><input id="newChore" placeholder="Add a chore"><button onclick="addChore()">Add</button></div>
+      <div class="list" id="chores"></div>
+    </section>
+
+    <section class="card span6">
+      <h2>Note of the day</h2>
+      <textarea id="note" placeholder="How did today go? What are you proud of?"></textarea>
+      <button style="margin-top:8px" onclick="saveNote()">Save note</button>
+    </section>
+
+    <section class="card span12">
+      <h2>Week review</h2>
+      <div class="small" id="weekReview">Keep checking in to build your weekly history.</div>
+      <div class="progress" style="margin-top:10px"><div class="bar" id="weekBar"></div></div>
+    </section>
+  </div>
+  <div class="footer">Winter Arc • Your data stays in this browser.</div>
+</div>
+
+<script>
+const KEY='winterArc_v1';
+let state=JSON.parse(localStorage.getItem(KEY)||'null')||{
+ start:new Date().toISOString().slice(0,10), water:0, waterGoal:8, meals:[],
+ chores:[], workout:'', workoutType:'Workout', note:'', checks:{}, checkins:{}
+};
+const todayKey=()=>new Date().toISOString().slice(0,10);
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function daysSince(a){let x=new Date(a+'T00:00:00'),y=new Date(todayKey()+'T00:00:00');return Math.max(1,Math.floor((y-x)/86400000)+1)}
+function render(){
+  const d=daysSince(state.start); document.getElementById('dayCount').textContent=d;
+  document.getElementById('weekCount').textContent=Math.ceil(d/7);
+  document.getElementById('startDate').value=state.start;
+  document.getElementById('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  document.getElementById('waterNum').textContent=state.water;
+  renderDrops(); renderMeals(); renderChores();
+  document.getElementById('workout').value=state.workout; document.getElementById('workoutType').value=state.workoutType;
+  document.getElementById('note').value=state.note;
+  document.querySelectorAll('[data-check]').forEach(x=>x.checked=!!state.checks[todayKey()+x.dataset.check]);
+  const n=Object.values(state.checkins).filter(v=>v).length;
+  document.getElementById('streak').textContent=n;
+  const weekStart=new Date(); weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
+  const count=Object.keys(state.checkins).filter(k=>new Date(k+'T00:00:00')>=weekStart&&state.checkins[k]).length;
+  document.getElementById('weekReview').textContent=`This week: ${count} completed check-in${count===1?'':'s'}.`;
+  document.getElementById('weekBar').style.width=Math.min(100,count/7*100)+'%';
+}
+function renderDrops(){
+ let h=''; for(let i=1;i<=state.waterGoal;i++)h+=`<button class="drop ${i<=state.water?'on':''}" onclick="setWater(${i})" aria-label="Set water to ${i}"></button>`;
+ document.getElementById('drops').innerHTML=h;
+}
+function setWater(n){state.water=n;save();render()}
+function setWaterGoal(){let n=Math.max(1,Math.min(20,+document.getElementById('waterGoal').value||8));state.waterGoal=n;state.water=Math.min(state.water,n);save();render()}
+function addMeal(){let v=document.getElementById('newMeal').value.trim();if(!v)return;state.meals.push(v);document.getElementById('newMeal').value='';save();render()}
+function delMeal(i){state.meals.splice(i,1);save();render()}
+function renderMeals(){document.getElementById('meals').innerHTML=state.meals.map((m,i)=>`<div class="meal"><select><option>Meal</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select><input value="${esc(m)}" onchange="editMeal(${i},this.value)"><button class="x" onclick="delMeal(${i})">×</button></div>`).join('')}
+function editMeal(i,v){state.meals[i]=v;save()}
+function saveWorkout(){state.workout=document.getElementById('workout').value;state.workoutType=document.getElementById('workoutType').value;save();render()}
+function addChore(){let v=document.getElementById('newChore').value.trim();if(!v)return;state.chores.push({text:v,done:false});document.getElementById('newChore').value='';save();render()}
+function toggleChore(i){state.chores[i].done=!state.chores[i].done;save();render()}
+function delChore(i){state.chores.splice(i,1);save();render()}
+function renderChores(){document.getElementById('chores').innerHTML=state.chores.map((c,i)=>`<div class="item ${c.done?'done':''}"><input type="checkbox" ${c.done?'checked':''} onchange="toggleChore(${i})"><span>${esc(c.text)}</span><button class="x" onclick="delChore(${i})">×</button></div>`).join('')}
+function saveNote(){state.note=document.getElementById('note').value;save();render()}
+function checkIn(){
+ const k=todayKey(); document.querySelectorAll('[data-check]').forEach(x=>state.checks[k+x.dataset.check]=x.checked);
+ state.checkins[k]=true; save(); render();
+}
+function saveStart(){const v=document.getElementById('startDate').value;if(v){state.start=v;save();render()}}
+render();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+</body>
+</html>

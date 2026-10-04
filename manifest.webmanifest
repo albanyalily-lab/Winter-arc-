@@ -1,0 +1,14 @@
+{
+  "name": "Winter Arc",
+  "short_name": "Winter Arc",
+  "description": "A personal Winter Arc daily tracker.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c0f14",
+  "theme_color": "#101318",
+  "orientation": "portrait",
+  "icons": [
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
